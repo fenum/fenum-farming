@@ -66,6 +66,7 @@ yarn run mnemonic
     - Ликвидность нужно заблокировать когда деплоится в главную сеть.
   - Создаем ферму под торговую пару `ETH/FNM` на `Uniswap` в `FarmGenerator` вызываем `createFarm`:
     - можно пользоваться determineBlockReward и determineEndBlock в FarmGenerator для рассчета параметров фермы.
+    - approve
     - createFarm(IERC20 _rewardToken, uint256 _amount, IERC20 _lpToken, IUniFactory _swapFactory, uint256 _blockReward, uint256 _startBlock, uint256 _bonusEndBlock, uint256 _bonus)
     - параметры createFarm:
       - _rewardToken = FENUM_TOKEN_ADDRESS;
