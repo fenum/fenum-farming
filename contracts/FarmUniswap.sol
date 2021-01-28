@@ -165,7 +165,7 @@ interface IFarmFactory {
 }
 
 
-contract Farm {
+contract FarmUniswap {
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
 
