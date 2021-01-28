@@ -95,23 +95,54 @@ library EnumerableSet {
   }
 }
 
+abstract contract Context {
+  function _msgSender() internal view virtual returns (address payable) {
+    return msg.sender;
+  }
+}
 
-contract FarmFactory {
-  using EnumerableSet for EnumerableSet.AddressSet;
+abstract contract Ownable is Context {
   address private _owner;
+
+  event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
+  constructor () internal {
+    address msgSender = _msgSender();
+    _owner = msgSender;
+    emit OwnershipTransferred(address(0), msgSender);
+  }
+
+  function owner() public view returns (address) {
+    return _owner;
+  }
+
+  modifier onlyOwner() {
+    require(_owner == _msgSender(), "Ownable: caller is not the owner");
+    _;
+  }
+
+  function renounceOwnership() public virtual onlyOwner {
+    emit OwnershipTransferred(_owner, address(0));
+    _owner = address(0);
+  }
+
+  function transferOwnership(address newOwner) public virtual onlyOwner {
+    require(newOwner != address(0), "Ownable: new owner is the zero address");
+    emit OwnershipTransferred(_owner, newOwner);
+    _owner = newOwner;
+  }
+}
+
+
+contract FarmFactory is Context, Ownable {
+  using EnumerableSet for EnumerableSet.AddressSet;
 
   EnumerableSet.AddressSet private farms;
   EnumerableSet.AddressSet private farmGenerators;
 
   mapping (address => EnumerableSet.AddressSet) private userFarms;
 
-  event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-
-  constructor() public {
-    address msgSender = _msgSender();
-    _owner = msgSender;
-    emit OwnershipTransferred(address(0), msgSender);
-  }
+  constructor() public { }
 
   function adminAllowFarmGenerator(address _address, bool _allow) public onlyOwner {
     if (_allow) {
@@ -195,30 +226,6 @@ contract FarmFactory {
   function userFarmAtIndex(address _user, uint256 _index) external view returns (address) {
     EnumerableSet.AddressSet storage set = userFarms[_user];
     return set.at(_index);
-  }
-
-  function _msgSender() internal view virtual returns (address payable) {
-    return msg.sender;
-  }
-
-  function owner() public view returns (address) {
-    return _owner;
-  }
-
-  modifier onlyOwner() {
-    require(_owner == _msgSender(), "Ownable: caller is not the owner");
-    _;
-  }
-
-  function renounceOwnership() public virtual onlyOwner {
-    emit OwnershipTransferred(_owner, address(0));
-    _owner = address(0);
-  }
-
-  function transferOwnership(address newOwner) public virtual onlyOwner {
-    require(newOwner != address(0), "Ownable: new owner is the zero address");
-    emit OwnershipTransferred(_owner, newOwner);
-    _owner = newOwner;
   }
 
   receive() external payable {
