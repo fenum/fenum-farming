@@ -16,13 +16,17 @@ npm install @fenum/farming
 
 ### Usage
 ```js
-const FarmGenerator = require('@fenum/farming/build/FarmGenerator.json');
 const FarmFactory = require('@fenum/farming/build/FarmFactory.json');
-const Farm = require('@fenum/farming/build/Farm.json');
+const FarmUniswapGenerator = require('@fenum/farming/build/FarmUniswapGenerator.json');
+const FarmUniswap = require('@fenum/farming/build/FarmUniswap.json');
+const FarmStakingGenerator = require('@fenum/farming/build/FarmStakingGenerator.json');
+const FarmStaking = require('@fenum/farming/build/FarmStaking.json');
 // or
-import FarmGenerator from '@fenum/farming/build/FarmGenerator.json';
 import FarmFactory from '@fenum/farming/build/FarmFactory.json';
-import Farm from '@fenum/farming/build/Farm.json';
+import FarmUniswapGenerator from '@fenum/farming/build/FarmUniswapGenerator.json';
+import FarmUniswap from '@fenum/farming/build/FarmUniswap.json';
+import FarmStakingGenerator from '@fenum/farming/build/FarmStakingGenerator.json';
+import FarmStaking from '@fenum/farming/build/FarmStaking.json';
 ```
 
 

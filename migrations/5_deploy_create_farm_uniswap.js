@@ -1,11 +1,10 @@
-const FarmGenerator = artifacts.require('FarmGenerator');
-const FarmFactory = artifacts.require('FarmFactory');
+const FarmUniswapGenerator = artifacts.require('FarmUniswapGenerator');
 
 
 
 module.exports = async function (deployer, network, accounts) {
   // 1. Создаем пару
-  // 2. Делаем approve на адрес FARM_GENERATOR_ADDRESS в количестве которое идет на вознаграждение
+  // 2. Делаем approve на адрес FARM_UNISWAP_GENERATOR_ADDRESS в количестве которое идет на вознаграждение
 
   // 3. Создаем ферму
   const rewardToken = ''; // FENUM_TOKEN_ADDRESS
@@ -28,6 +27,6 @@ module.exports = async function (deployer, network, accounts) {
     bonusEndBlock,
     bonus,
   ];
-  const farmGenerator = await FarmGenerator.deployed();
-  await farmGenerator.createFarm(...args);
+  const farmUniswapGenerator = await FarmUniswapGenerator.deployed();
+  await farmUniswapGenerator.createFarm(...args);
 };
