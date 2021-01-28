@@ -164,14 +164,8 @@ interface IFarmFactory {
   function registerFarm(address _farmAddress) external;
 }
 
-abstract contract Context {
-  function _msgSender() internal view virtual returns (address payable) {
-    return msg.sender;
-  }
-}
 
-
-contract FarmUniswap is Context {
+contract FarmUniswap {
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
 
@@ -366,5 +360,9 @@ contract FarmUniswap is Context {
     } else {
       farmInfo.rewardToken.transfer(_to, _amount);
     }
+  }
+
+  function _msgSender() internal view virtual returns (address payable) {
+    return msg.sender;
   }
 }
