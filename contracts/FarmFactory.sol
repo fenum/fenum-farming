@@ -227,12 +227,4 @@ contract FarmFactory is Context, Ownable {
     EnumerableSet.AddressSet storage set = userFarms[_user];
     return set.at(_index);
   }
-
-  receive() external payable {
-    revert("FarmFactory: contract does not accept Ether.");
-  }
-
-  fallback() external {
-    revert("FarmFactory: contract action not found.");
-  }
 }

@@ -1,12 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.6.0 <0.7.0;
-import "./Farm.sol";
-
-interface IERCBurn {
-  function burn(uint256 _amount) external;
-  function approve(address spender, uint256 amount) external returns (bool);
-  function allowance(address owner, address spender) external returns (uint256);
-}
+import "./FarmUniswap.sol";
 
 interface IUniFactory {
   function getPair(address tokenA, address tokenB) external view returns (address);
@@ -63,11 +57,47 @@ interface IUniswapV2Pair {
   function initialize(address, address) external;
 }
 
+abstract contract Context {
+  function _msgSender() internal view virtual returns (address payable) {
+    return msg.sender;
+  }
+}
 
-contract FarmGenerator {
-  using SafeMath for uint256;
+abstract contract Ownable is Context {
   address private _owner;
 
+  event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
+  constructor () internal {
+    address msgSender = _msgSender();
+    _owner = msgSender;
+    emit OwnershipTransferred(address(0), msgSender);
+  }
+
+  function owner() public view returns (address) {
+    return _owner;
+  }
+
+  modifier onlyOwner() {
+    require(_owner == _msgSender(), "Ownable: caller is not the owner");
+    _;
+  }
+
+  function renounceOwnership() public virtual onlyOwner {
+    emit OwnershipTransferred(_owner, address(0));
+    _owner = address(0);
+  }
+
+  function transferOwnership(address newOwner) public virtual onlyOwner {
+    require(newOwner != address(0), "Ownable: new owner is the zero address");
+    emit OwnershipTransferred(_owner, newOwner);
+    _owner = newOwner;
+  }
+}
+
+
+contract FarmUniswapGenerator is Context, Ownable {
+  using SafeMath for uint256;
   IFarmFactory public factory;
 
   struct FarmParameters {
@@ -78,13 +108,7 @@ contract FarmGenerator {
     uint256 requiredAmount;
   }
 
-  event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-
   constructor(IFarmFactory _factory) public {
-    address msgSender = _msgSender();
-    _owner = msgSender;
-    emit OwnershipTransferred(address(0), msgSender);
-
     factory = _factory;
   }
 
@@ -117,14 +141,14 @@ contract FarmGenerator {
   }
 
   /**
-   * @notice Creates a new Farm contract and registers it in the 
-   * .sol. All farming rewards are locked in the Farm Contract
+   * @notice Creates a new FarmUniswap contract and registers it in the 
+   * .sol. All farming rewards are locked in the FarmUniswap Contract
    */
-  function createFarm(IERC20 _rewardToken, uint256 _amount, IERC20 _lpToken, IUniFactory _swapFactory, uint256 _blockReward, uint256 _startBlock, uint256 _bonusEndBlock, uint256 _bonus) public onlyOwner returns (address){
+  function createFarmUniswap(IERC20 _rewardToken, uint256 _amount, IERC20 _lpToken, IUniFactory _swapFactory, uint256 _blockReward, uint256 _startBlock, uint256 _bonusEndBlock, uint256 _bonus) public onlyOwner returns (address){
     require(_startBlock > block.number, 'START'); // ideally at least 24 hours more to give farmers time
     require(_bonus > 0, 'BONUS');
-    require(address(_rewardToken) != address(0), 'TOKEN');
-    require(_blockReward > 1000, 'BR'); // minimum 1000 divisibility per block reward
+    require(address(_rewardToken) != address(0), 'REWARD TOKEN');
+    require(_blockReward > 1000, 'BLOCK REWARD'); // minimum 1000 divisibility per block reward
     IUniFactory swapFactory = _swapFactory;
     // ensure this pair is on swapFactory by querying the factory
     IUniswapV2Pair lpair = IUniswapV2Pair(address(_lpToken));
@@ -135,43 +159,11 @@ contract FarmGenerator {
     (params.endBlock, params.requiredAmount) = determineEndBlock(_amount, _blockReward, _startBlock, _bonusEndBlock, _bonus);
 
     TransferHelper.safeTransferFrom(address(_rewardToken), address(_msgSender()), address(this), params.requiredAmount);
-    Farm newFarm = new Farm(address(factory), address(this));
+    FarmUniswap newFarm = new FarmUniswap(address(factory), address(this));
     TransferHelper.safeApprove(address(_rewardToken), address(newFarm), params.requiredAmount);
     newFarm.init(_rewardToken, params.requiredAmount, _lpToken, _blockReward, _startBlock, params.endBlock, _bonusEndBlock, _bonus);
 
     factory.registerFarm(address(newFarm));
     return (address(newFarm));
-  }
-
-  function _msgSender() internal view virtual returns (address payable) {
-    return msg.sender;
-  }
-
-  function owner() public view returns (address) {
-    return _owner;
-  }
-
-  modifier onlyOwner() {
-    require(_owner == _msgSender(), "Ownable: caller is not the owner");
-    _;
-  }
-
-  function renounceOwnership() public virtual onlyOwner {
-    emit OwnershipTransferred(_owner, address(0));
-    _owner = address(0);
-  }
-
-  function transferOwnership(address newOwner) public virtual onlyOwner {
-    require(newOwner != address(0), "Ownable: new owner is the zero address");
-    emit OwnershipTransferred(_owner, newOwner);
-    _owner = newOwner;
-  }
-
-  receive() external payable {
-    revert("FarmGenerator: contract does not accept Ether.");
-  }
-
-  fallback() external {
-    revert("FarmGenerator: contract action not found.");
   }
 }
