@@ -164,6 +164,29 @@ interface IFarmFactory {
   function registerFarm(address _farmAddress) external;
 }
 
+contract RewardHolder {
+  using SafeMath for uint256;
+  using SafeERC20 for IERC20;
+
+  address public farmGenerator;
+  address public farm;
+  address public rewardToken;
+  uint256 public farmableSupply;
+
+  constructor(address _farmGenerator, address _farm) public {
+    farmGenerator = _farmGenerator;
+    farm = _farm;
+  }
+
+  function init(address _rewardToken, uint256 _amount) public {
+    address msgSender = msg.sender;
+    TransferHelper.safeTransferFrom(_rewardToken, msgSender, address(this), _amount);
+    TransferHelper.safeApprove(_rewardToken, farm, _amount);
+    rewardToken = _rewardToken;
+    farmableSupply = _amount;
+  }
+}
+
 
 contract FarmStaking {
   using SafeMath for uint256;
@@ -179,6 +202,7 @@ contract FarmStaking {
   struct FarmInfo {
     IERC20 token;
     IERC20 rewardToken;
+    address rewardHolder;
     uint256 startBlock;
     uint256 blockReward;
     uint256 bonusEndBlock;
@@ -213,12 +237,12 @@ contract FarmStaking {
   /**
    * @notice initialize the farming contract. This is called only once upon farm creation and the FarmGenerator ensures the farm has the correct paramaters
    */
-  function init(IERC20 _rewardToken, uint256 _amount, IERC20 _token, uint256 _blockReward, uint256 _startBlock, uint256 _endBlock, uint256 _bonusEndBlock, uint256 _bonus) public {
+  function init(address _rewardHolder, IERC20 _rewardToken, uint256 _amount, IERC20 _token, uint256 _blockReward, uint256 _startBlock, uint256 _endBlock, uint256 _bonusEndBlock, uint256 _bonus) public {
     address msgSender = _msgSender();
     require(msgSender == address(farmGenerator), 'FORBIDDEN');
 
-    TransferHelper.safeTransferFrom(address(_rewardToken), msgSender, address(this), _amount);
     farmInfo.rewardToken = _rewardToken;
+    farmInfo.rewardHolder = _rewardHolder;
 
     farmInfo.startBlock = _startBlock;
     farmInfo.blockReward = _blockReward;
@@ -354,11 +378,11 @@ contract FarmStaking {
    * @param _amount the total amount of tokens to transfer
    */
   function safeRewardTransfer(address _to, uint256 _amount) internal {
-    uint256 rewardBal = farmInfo.rewardToken.balanceOf(address(this));
+    uint256 rewardBal = farmInfo.rewardToken.balanceOf(farmInfo.rewardHolder);
     if (_amount > rewardBal) {
-      farmInfo.rewardToken.transfer(_to, rewardBal);
+      farmInfo.rewardToken.transferFrom(farmInfo.rewardHolder, _to, rewardBal);
     } else {
-      farmInfo.rewardToken.transfer(_to, _amount);
+      farmInfo.rewardToken.transferFrom(farmInfo.rewardHolder, _to, _amount);
     }
   }
 
