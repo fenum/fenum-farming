@@ -101,8 +101,10 @@ contract FarmStakingGenerator is Context, Ownable {
 
     TransferHelper.safeTransferFrom(address(_rewardToken), address(_msgSender()), address(this), params.requiredAmount);
     FarmStaking newFarm = new FarmStaking(address(factory), address(this));
-    TransferHelper.safeApprove(address(_rewardToken), address(newFarm), params.requiredAmount);
-    newFarm.init(_rewardToken, params.requiredAmount, _token, _blockReward, _startBlock, params.endBlock, _bonusEndBlock, _bonus);
+    RewardHolder newRewardHolder = new RewardHolder(address(this), address(newFarm));
+    TransferHelper.safeApprove(address(_rewardToken), address(newRewardHolder), params.requiredAmount);
+    newRewardHolder.init(address(_rewardToken), params.requiredAmount);
+    newFarm.init(address(newRewardHolder), _rewardToken, params.requiredAmount, _token, _blockReward, _startBlock, params.endBlock, _bonusEndBlock, _bonus);
 
     factory.registerFarm(address(newFarm));
     return (address(newFarm));
